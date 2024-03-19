@@ -10,7 +10,7 @@ docker run --gpus all -it --mount type=bind,source=/volume1/Datasets/matterport3
 
 Now (from inside the docker container), build the simulator code:
 ```
-cd /root/mount/Matterport3DSimulator
+cd /workspace/Matterport3DSimulator-fork
 mkdir build && cd build
 cmake -DEGL_RENDERING=ON ..
 make
