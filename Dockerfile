@@ -1,31 +1,25 @@
-# Matterport3DSimulator
-# Requires nvidia gpu with driver 396.37 or higher
+FROM pytorch/pytorch:2.2.0-cuda12.1-cudnn8-devel
 
-
-FROM nvidia/cudagl:9.2-devel-ubuntu18.04
-
-# Install cudnn
-ENV CUDNN_VERSION 7.6.4.38
-LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libcudnn7=$CUDNN_VERSION-1+cuda9.2 \
-libcudnn7-dev=$CUDNN_VERSION-1+cuda9.2 \
-&& \
-    apt-mark hold libcudnn7 && \
-    rm -rf /var/lib/apt/lists/*
-
-
-# Install a few libraries to support both EGL and OSMESA options
+#Prevent interactive prompts, like asking for timezone
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y wget doxygen curl libjsoncpp-dev libepoxy-dev libglm-dev libosmesa6 libosmesa6-dev libglew-dev libopencv-dev python-opencv python3-setuptools python3-dev python3-pip
-RUN pip3 install opencv-python==4.1.0.25 torch==1.1.0 torchvision==0.3.0 numpy==1.13.3 pandas==0.24.1 networkx==2.2
 
-#install latest cmake
-ADD https://cmake.org/files/v3.12/cmake-3.12.2-Linux-x86_64.sh /cmake-3.12.2-Linux-x86_64.sh
-RUN mkdir /opt/cmake
-RUN sh /cmake-3.12.2-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
-RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
-RUN cmake --version
+#Install Commandline utils
+RUN apt-get update && \
+    apt-get install -y git
 
-ENV PYTHONPATH=/root/mount/Matterport3DSimulator/build
+#Install OpenCV and some other dependancies for Matterport3dSimulator
+RUN apt-get update && \
+    apt-get install -y libopencv-dev python3-opencv libgl1-mesa-dev libjsoncpp-dev libepoxy-dev libglm-dev libosmesa6 libosmesa6-dev libglew-dev python3-setuptools python3-dev python3-pip
+
+RUN pip install opencv-python torch torchvision numpy pandas networkx
+
+#Clone the fork ready to install Matterport3DSimulator-fork
+RUN git clone --recursive https://github.com/padouk/Matterport3DSimulator.git && \
+    mv Matterport3DSimulator Matterport3DSimulator-fork && \
+    cd Matterport3DSimulator-fork && \
+    git checkout env/docker/pytorch/pytorch && \
+    mkdir build
+
+RUN cd Matterport3DSimulator-fork/build && \
+    cmake -DEGL_RENDERING=ON .. && \
+    make -j4
