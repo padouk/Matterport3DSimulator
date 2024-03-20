@@ -14,10 +14,13 @@ RUN apt-get update && \
 RUN pip install opencv-python torch torchvision numpy pandas networkx
 
 #Clone the fork ready to install Matterport3DSimulator-fork
-RUN git clone --recursive https://github.com/padouk/Matterport3DSimulator.git && \
+RUN git clone https://github.com/padouk/Matterport3DSimulator.git && \
     mv Matterport3DSimulator Matterport3DSimulator-fork && \
     cd Matterport3DSimulator-fork && \
     git checkout env/docker/pytorch/pytorch && \
+    cd pybind11 && \
+    git pull && \
+    cd .. && \
     mkdir build
 
 RUN cd Matterport3DSimulator-fork/build && \
